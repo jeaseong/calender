@@ -1,5 +1,12 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, LayoutChangeEvent } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import CalenderButton from '../components/CalenderButton';
 import CalendarDay from '../components/CalendarDay';
@@ -12,6 +19,7 @@ import {
   isSameDate,
   isNotCurMonth,
 } from '../utils/date';
+import { validHeight } from '../utils/utils';
 import { WEEK } from '../utils/constant';
 
 interface DateType {
@@ -27,8 +35,8 @@ interface HeaderProps {
 }
 
 interface CalendarProps {
-  calendar: DateType[];
   onClickDay: (cur: DateType) => void;
+  changeDate: () => void;
   isClick: DateType;
   date: DateType;
 }
@@ -50,27 +58,62 @@ const Week = () => {
   return (
     <View style={styles.week}>
       {WEEK.map((item) => (
-        <Text>{item.day}</Text>
+        <Text key={item.day}>{item.day}</Text>
       ))}
     </View>
   );
 };
 
 const Calendar = (props: CalendarProps) => {
-  const { calendar, onClickDay, isClick, date } = props;
+  const [layoutHeight, setLayoutHeight] = useState(250);
+  const { onClickDay, isClick, date, changeDate } = props;
+
+  const isWeekCalendar = useSharedValue(false);
+  const calendarHeight = useSharedValue(0);
+
+  const onLayout = (e: LayoutChangeEvent) => {
+    const { height } = e.nativeEvent.layout;
+    setLayoutHeight(height);
+  };
+
+  const calendar = makeCalendarDate({ year: date.year, month: date.month });
+  const animatedStyles = useAnimatedStyle(() => {
+    return {
+      height:
+        calendarHeight.value <= 250
+          ? withTiming(calendarHeight.value, { duration: 100 })
+          : 250,
+    };
+  }, []);
+
+  const gesture = Gesture.Pan()
+    .onBegin(() => {
+      console.log(calendarHeight.value);
+    })
+    .onChange((e) => {
+      calendarHeight.value += e.changeY;
+    })
+    .onEnd(() => {});
+
   return (
-    <View style={styles.days}>
-      {calendar.map((item) => (
-        <CalendarDay
-          onPress={() => onClickDay(item)}
-          style={[isSameDate(isClick, item) && styles.border]}
-          isCur={isNotCurMonth(item.month, date.month)}
-          key={makeDateKey({ month: item.month, day: item.day })}
-        >
-          {item.day}
-        </CalendarDay>
-      ))}
-    </View>
+    <GestureDetector gesture={gesture}>
+      <Animated.View onLayout={onLayout} style={[styles.days, animatedStyles]}>
+        {calendar.map((item) => (
+          <CalendarDay
+            onPress={() => onClickDay(item)}
+            style={[isSameDate(isClick, item) && styles.border]}
+            isCur={isNotCurMonth(item.month, date.month)}
+            key={makeDateKey({
+              year: item.year,
+              month: item.month,
+              day: item.day,
+            })}
+          >
+            {item.day}
+          </CalendarDay>
+        ))}
+      </Animated.View>
+    </GestureDetector>
   );
 };
 
@@ -82,7 +125,6 @@ const CalenderScreen = () => {
     month: 0,
     day: 0,
   });
-  const calendar = makeCalendarDate({ year: date.year, month: date.month });
 
   const onClickDay = (cur: { year: number; month: number; day: number }) => {
     setIsClick(cur);
@@ -120,6 +162,10 @@ const CalenderScreen = () => {
     });
   };
 
+  const changeDate = () => {
+    setDate((cur) => ({ ...cur, month: cur.month + 1 }));
+  };
+
   const headerProps = {
     date,
     onPressNext,
@@ -127,10 +173,10 @@ const CalenderScreen = () => {
   };
 
   const calendarProps = {
-    calendar,
     onClickDay,
     isClick,
     date,
+    changeDate,
   };
 
   return (
@@ -168,11 +214,16 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'black',
   },
   border: {
     borderWidth: 1,
     borderRadius: 14,
     borderColor: 'blue',
+  },
+  check: {
+    color: 'blue',
   },
 });
 

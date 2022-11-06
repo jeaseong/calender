@@ -7,20 +7,6 @@ interface DayType extends DateType {
   day: number;
 }
 
-export const getFirstDayInMonth = ({ year, month }: DateType) => {
-  return new Date(year, month - 1, 1).getDay();
-};
-
-export const getDayLengthInMonth = ({ year, month }: DateType) => {
-  return new Date(year, month - 1, 1).getDate();
-};
-
-export const getWeekLengthInMonth = ({ year, month }: DateType) => {
-  const dayLength = getDayLengthInMonth({ year, month });
-  const firstDay = getFirstDayInMonth({ year, month });
-  return Math.ceil((dayLength - (6 - firstDay + 1)) / 7) + 1;
-};
-
 export const getCurDate = () => {
   const date = new Date();
   const year = date.getFullYear();
@@ -58,8 +44,8 @@ export const convertToMonth = (month: number) => {
   }
 };
 
-export const makeDateKey = ({ month, day }: { month: number; day: number }) => {
-  return `${convertToMonth(month)}-${day}`;
+export const makeDateKey = ({ year, month, day }: DayType) => {
+  return `${year}${convertToMonth(month)}${day}`;
 };
 
 export const makeCalendarDate = ({ year, month }: DateType) => {

@@ -1,30 +1,30 @@
 export const WEEK = [
   {
-    day: 'Sun',
+    day: '일',
     color: 'red',
   },
   {
-    day: 'Mon',
+    day: '월',
     color: '',
   },
   {
-    day: 'Tue',
+    day: '화',
     color: '',
   },
   {
-    day: 'Wed',
+    day: '수',
     color: '',
   },
   {
-    day: 'Thu',
+    day: '목',
     color: '',
   },
   {
-    day: 'Fri',
+    day: '금',
     color: '',
   },
   {
-    day: 'Sat',
+    day: '토',
     color: 'blue',
   },
 ];
