@@ -25,7 +25,7 @@ import {
   getNextDate,
 } from '../utils/date';
 
-import { WEEK } from '../utils/constant';
+import { WEEK, CALENDAR_PADDING } from '../utils/constant';
 
 const { width: windowWidth } = Dimensions.get('window');
 
@@ -216,16 +216,16 @@ const CalenderScreen = () => {
     });
   };
 
-  const scrollToMiddleCalendar = (): void => {
+  const scrollToMiddleCalendar = () => {
     scrollRef.current?.scrollTo({
-      x: layoutWidth - 40,
+      x: layoutWidth - CALENDAR_PADDING,
       animated: false,
     });
   };
 
-  const scrollEffect = (e: NativeSyntheticEvent<NativeScrollEvent>): void => {
+  const scrollEffect = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const xValue = Math.floor(e.nativeEvent.contentOffset.x);
-    const maxLayoutFloor = Math.floor(layoutWidth - 40) * 2;
+    const maxLayoutFloor = Math.floor(layoutWidth - CALENDAR_PADDING) * 2;
     const prevMonth = getPrevDate(date);
     const nextMonth = getNextDate(date);
 
@@ -252,7 +252,7 @@ const CalenderScreen = () => {
   return (
     <SafeAreaView
       style={styles.container}
-      onLayout={(e): void => {
+      onLayout={(e) => {
         setLayoutWidth(e.nativeEvent.layout.width);
         scrollToMiddleCalendar();
       }}
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   calendar: {
-    width: windowWidth - 40,
+    width: windowWidth - CALENDAR_PADDING,
   },
   header: {
     flexDirection: 'row',

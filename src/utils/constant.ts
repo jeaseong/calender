@@ -28,3 +28,5 @@ export const WEEK = [
     color: 'blue',
   },
 ];
+
+export const CALENDAR_PADDING = 40;
