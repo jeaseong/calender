@@ -15,6 +15,20 @@ export const getCurDate = () => {
   return { year, month, day };
 };
 
+export const getPrevDate = (date: DayType) => {
+  if (date.month === 0) {
+    return { year: date.year - 1, month: 11, day: date.day };
+  }
+  return { year: date.year, month: date.month - 1, day: date.day };
+};
+
+export const getNextDate = (date: DayType) => {
+  if (date.month === 11) {
+    return { year: date.year + 1, month: 0, day: date.day };
+  }
+  return { year: date.year, month: date.month + 1, day: date.day };
+};
+
 export const convertToMonth = (month: number) => {
   switch (month) {
     case 0:

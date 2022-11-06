@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, LayoutChangeEvent } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import React, { useState, useRef, useMemo } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  SafeAreaView,
+  ScrollView,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from 'react-native';
 
 import CalenderButton from '../components/CalenderButton';
 import CalendarDay from '../components/CalendarDay';
@@ -18,9 +21,13 @@ import {
   makeDateKey,
   isSameDate,
   isNotCurMonth,
+  getPrevDate,
+  getNextDate,
 } from '../utils/date';
-import { validHeight } from '../utils/utils';
+
 import { WEEK } from '../utils/constant';
+
+const { width: windowWidth } = Dimensions.get('window');
 
 interface DateType {
   month: number;
@@ -29,25 +36,34 @@ interface DateType {
 }
 
 interface HeaderProps {
-  date: DateType;
+  curDate: DateType;
   onPressPrev: () => void;
   onPressNext: () => void;
 }
 
 interface CalendarProps {
   onClickDay: (cur: DateType) => void;
-  changeDate: () => void;
   isClick: DateType;
+  curDate: DateType;
+}
+
+interface RenderCalendarProps {
+  curDate: DateType;
+}
+
+interface CalendarsProps {
   date: DateType;
+  onPressPrev: () => void;
+  onPressNext: () => void;
 }
 
 const Header = (props: HeaderProps) => {
-  const { date, onPressPrev, onPressNext } = props;
+  const { curDate, onPressPrev, onPressNext } = props;
   return (
     <View style={styles.header}>
       <CalenderButton onPress={onPressPrev}>&lt;</CalenderButton>
       <Text>
-        {convertToMonth(date.month)} {date.year}
+        {convertToMonth(curDate.month)} {curDate.year}
       </Text>
       <CalenderButton onPress={onPressNext}>&gt;</CalenderButton>
     </View>
@@ -65,70 +81,108 @@ const Week = () => {
 };
 
 const Calendar = (props: CalendarProps) => {
-  const [layoutHeight, setLayoutHeight] = useState(250);
-  const { onClickDay, isClick, date, changeDate } = props;
+  const { onClickDay, isClick, curDate } = props;
 
-  const isWeekCalendar = useSharedValue(false);
-  const calendarHeight = useSharedValue(0);
+  const calendar = useMemo(
+    () =>
+      makeCalendarDate({
+        year: curDate.year,
+        month: curDate.month,
+      }),
+    [curDate],
+  );
 
-  const onLayout = (e: LayoutChangeEvent) => {
-    const { height } = e.nativeEvent.layout;
-    setLayoutHeight(height);
+  const renderDates = (item: DateType) => {
+    return (
+      <CalendarDay
+        onPress={() => onClickDay(item)}
+        style={[isSameDate(isClick, item) && styles.border]}
+        isCur={isNotCurMonth(item.month, curDate.month)}
+        key={makeDateKey({
+          year: item.year,
+          month: item.month,
+          day: item.day,
+        })}
+      >
+        {item.day}
+      </CalendarDay>
+    );
   };
 
-  const calendar = makeCalendarDate({ year: date.year, month: date.month });
-  const animatedStyles = useAnimatedStyle(() => {
-    return {
-      height:
-        calendarHeight.value <= 250
-          ? withTiming(calendarHeight.value, { duration: 100 })
-          : 250,
-    };
-  }, []);
-
-  const gesture = Gesture.Pan()
-    .onBegin(() => {
-      console.log(calendarHeight.value);
-    })
-    .onChange((e) => {
-      calendarHeight.value += e.changeY;
-    })
-    .onEnd(() => {});
-
   return (
-    <GestureDetector gesture={gesture}>
-      <Animated.View onLayout={onLayout} style={[styles.days, animatedStyles]}>
-        {calendar.map((item) => (
-          <CalendarDay
-            onPress={() => onClickDay(item)}
-            style={[isSameDate(isClick, item) && styles.border]}
-            isCur={isNotCurMonth(item.month, date.month)}
-            key={makeDateKey({
-              year: item.year,
-              month: item.month,
-              day: item.day,
-            })}
-          >
-            {item.day}
-          </CalendarDay>
-        ))}
-      </Animated.View>
-    </GestureDetector>
+    <FlatList
+      contentContainerStyle={styles.days}
+      data={calendar}
+      numColumns={7}
+      renderItem={({ item }) => renderDates(item)}
+      keyExtractor={(item) =>
+        makeDateKey({
+          year: item.year,
+          month: item.month,
+          day: item.day,
+        })
+      }
+      scrollEnabled={false}
+    />
   );
 };
 
-const CalenderScreen = () => {
-  const curDate = getCurDate();
-  const [date, setDate] = useState(curDate);
+const Calendars = (props: CalendarsProps) => {
+  const { date, onPressNext, onPressPrev } = props;
+
+  const prevDate = getPrevDate(date);
+  const nextDate = getNextDate(date);
+
   const [isClick, setIsClick] = useState<DateType>({
     year: 0,
     month: 0,
     day: 0,
   });
 
-  const onClickDay = (cur: { year: number; month: number; day: number }) => {
-    setIsClick(cur);
+  const RenderCalendar = (props: RenderCalendarProps) => {
+    const { curDate } = props;
+
+    const onClickDay = (cur: { year: number; month: number; day: number }) => {
+      setIsClick(cur);
+    };
+
+    const headerProps = {
+      curDate,
+      onPressNext,
+      onPressPrev,
+    };
+
+    const calendarProps = {
+      onClickDay,
+      isClick,
+      curDate,
+    };
+
+    return (
+      <View style={styles.calendar}>
+        <Header {...headerProps} />
+        <Week />
+        <Calendar {...calendarProps} />
+      </View>
+    );
   };
+
+  return (
+    <View style={styles.carousel}>
+      <RenderCalendar curDate={prevDate} />
+      <RenderCalendar curDate={date} />
+      <RenderCalendar curDate={nextDate} />
+    </View>
+  );
+};
+
+const CalenderScreen = () => {
+  const scrollRef = useRef<ScrollView>(null);
+  const [layoutWidth, setLayoutWidth] = useState(windowWidth);
+  const curDate = getCurDate();
+  const [date, setDate] = useState(curDate);
+  // const prevMonth = useMemo(() => getPrevDate(date), [date]);
+  // const nextMonth = useMemo(() => getNextDate(date), [date]);
 
   const onPressNext = () => {
     setDate((cur) => {
@@ -162,35 +216,74 @@ const CalenderScreen = () => {
     });
   };
 
-  const changeDate = () => {
-    setDate((cur) => ({ ...cur, month: cur.month + 1 }));
+  const scrollToMiddleCalendar = (): void => {
+    scrollRef.current?.scrollTo({
+      x: layoutWidth - 40,
+      animated: false,
+    });
   };
 
-  const headerProps = {
+  const scrollEffect = (e: NativeSyntheticEvent<NativeScrollEvent>): void => {
+    const xValue = Math.floor(e.nativeEvent.contentOffset.x);
+    const maxLayoutFloor = Math.floor(layoutWidth - 40) * 2;
+    const prevMonth = getPrevDate(date);
+    const nextMonth = getNextDate(date);
+
+    if (!layoutWidth || layoutWidth === 1) {
+      return;
+    }
+    if (scrollRef && scrollRef.current) {
+      if (xValue === 0) {
+        scrollToMiddleCalendar();
+        setDate(prevMonth);
+      } else if (xValue === maxLayoutFloor) {
+        scrollToMiddleCalendar();
+        setDate(nextMonth);
+      }
+    }
+  };
+
+  const calendarsProp = {
     date,
     onPressNext,
     onPressPrev,
   };
 
-  const calendarProps = {
-    onClickDay,
-    isClick,
-    date,
-    changeDate,
-  };
-
   return (
-    <View style={styles.container}>
-      <Header {...headerProps} />
-      <Week />
-      <Calendar {...calendarProps} />
-    </View>
+    <SafeAreaView
+      style={styles.container}
+      onLayout={(e): void => {
+        setLayoutWidth(e.nativeEvent.layout.width);
+        scrollToMiddleCalendar();
+      }}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollView}
+        horizontal
+        pagingEnabled
+        scrollEventThrottle={16}
+        contentOffset={{ x: layoutWidth, y: 0 }}
+        ref={scrollRef}
+        onMomentumScrollEnd={scrollEffect}
+        showsHorizontalScrollIndicator={false}
+      >
+        <Calendars {...calendarsProp} />
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    height: 400,
     paddingHorizontal: 20,
+  },
+  scrollView: {},
+  carousel: {
+    flexDirection: 'row',
+  },
+  calendar: {
+    width: windowWidth - 40,
   },
   header: {
     flexDirection: 'row',
@@ -202,21 +295,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
-
-  sun: {
-    color: 'red',
-  },
-  say: {
-    color: 'blue',
-  },
-  days: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'black',
-  },
+  days: {},
   border: {
     borderWidth: 1,
     borderRadius: 14,
