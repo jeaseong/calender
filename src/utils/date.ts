@@ -62,17 +62,58 @@ export const makeDateKey = ({ year, month, day }: DayType) => {
   return `${year}${convertToMonth(month)}${day}`;
 };
 
-export const makeWeeklyCalendarDate = (
-  date: DayType,
-  arr: DayType[],
-): DayType[] => {
-  if (arr.length === 14) {
-    return arr;
+// export const makeWeeklyCalendarDate = (
+//   date: DayType,
+//   arr: DayType[],
+// ): DayType[] => {
+//   if (arr.length === 14) {
+//     return arr;
+//   }
+//   for (let i = 0; i < 7; i++) {
+//     arr.push({ ...date });
+//   }
+//   return makeWeeklyCalendarDate(arr.slice(-1)[0], arr);
+// };
+
+const addDay = (date: DayType, d: number) => {
+  const { year, month, day } = date;
+  const curLastDate = new Date(year, month + 1, 0).getDate();
+  if (day + d > curLastDate) {
+    const dd = day + d - curLastDate;
+    const mm = month === 11 ? 0 : month + 1;
+    const yy = month === 11 ? year + 1 : year;
+    return { year: yy, month: mm, day: dd };
   }
-  for (let i = 0; i < 7; i++) {
-    arr.push({ ...date });
+  return { year, month, day: day + d };
+};
+
+const subDay = (date: DayType, d: number) => {
+  const { year, month, day } = date;
+  const prevDate = new Date(year, month, 0).getDate();
+  if (day === 1) {
+    const dd = prevDate + (day - d);
+    const mm = month === 0 ? 11 : month - 1;
+    const yy = month === 0 ? year - 1 : year;
+    return { year: yy, month: mm, day: dd };
   }
-  return makeWeeklyCalendarDate(arr.slice(-1)[0], arr);
+  return { year, month, day: day - d };
+};
+
+export const makeWeeklyCalendarDate = ({ year, month }: DateType) => {
+  const monthDate = makeCalendarDate({ year, month });
+  const first = monthDate[0];
+  const last = monthDate[monthDate.length - 1];
+  const prev = [];
+  for (let i = 1; i <= 14; i++) {
+    const date = subDay(first, i);
+    prev.unshift(date);
+  }
+  const next = [];
+  for (let i = 1; i <= 14; i++) {
+    const date = addDay(last, i);
+    next.push(date);
+  }
+  return prev.concat(monthDate, next);
 };
 
 export const makeCalendarDate = ({ year, month }: DateType) => {
