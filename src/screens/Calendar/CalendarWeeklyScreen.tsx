@@ -1,20 +1,13 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useRef } from 'react';
 import {
-  StyleSheet,
-  View,
   FlatList,
-  SafeAreaView,
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
 
-import { ScrollView } from 'react-native-gesture-handler';
-
-import CalendarDay from '../../components/CalendarDay';
-
 import {
-  makeCalendarDate,
+  makeWeeklyCalendarDate,
   makeDateKey,
   isNotCurMonth,
   getPrevDate,
@@ -29,7 +22,10 @@ const { width: windowWidth } = Dimensions.get('window');
 const CalendarWeeklyScreen = (props: CalendarMonthlyProps) => {
   const { date, onChangeDate } = props;
 
-  const weeklyDate = makeCalendarDate({ year: date.year, month: date.month });
+  const weeklyDate = makeWeeklyCalendarDate({
+    year: date.year,
+    month: date.month,
+  });
   const length = weeklyDate.length;
   const flatListRef = useRef<FlatList>();
 
@@ -46,7 +42,7 @@ const CalendarWeeklyScreen = (props: CalendarMonthlyProps) => {
 
       flatListRef.current.scrollToIndex({
         animated: false,
-        index: length - 1,
+        index: 14,
       });
     }
   };

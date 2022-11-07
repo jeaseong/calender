@@ -41,9 +41,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'transparent',
   },
-  isNotCur: {
-    color: '#C9C9C9',
-  },
+  isNotCur: {},
 });
 
 export default CalendarDayWeekly;
