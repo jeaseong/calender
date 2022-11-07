@@ -1,7 +1,6 @@
 import React, { useState, useRef, useMemo } from 'react';
 import {
   StyleSheet,
-  Text,
   View,
   FlatList,
   SafeAreaView,
@@ -12,85 +11,38 @@ import {
 
 import { ScrollView } from 'react-native-gesture-handler';
 
-import CalenderButton from '../components/CalenderButton';
-import CalendarDay from '../components/CalendarDay';
+import CalendarDay from '../../components/CalendarDay';
 
 import {
-  getCurDate,
   makeCalendarDate,
-  convertToMonth,
   makeDateKey,
   isSameDate,
   isNotCurMonth,
   getPrevDate,
   getNextDate,
-} from '../utils/date';
+} from '../../utils/date';
 
-import { WEEK, CALENDAR_PADDING } from '../utils/constant';
+import { CALENDAR_PADDING } from '../../utils/constant';
+
+import {
+  CalendarProps,
+  CalendarsProps,
+  DateType,
+  CalendarMonthlyProps,
+} from './Calendar.type';
 
 const { width: windowWidth } = Dimensions.get('window');
 
-interface DateType {
-  month: number;
-  day: number;
-  year: number;
-}
-
-interface HeaderProps {
-  curDate: DateType;
-  onPressPrev: () => void;
-  onPressNext: () => void;
-}
-
-interface CalendarProps {
-  onClickDay: (cur: DateType) => void;
-  isClick: DateType;
-  curDate: DateType;
-}
-
-interface RenderCalendarProps {
-  curDate: DateType;
-}
-
-interface CalendarsProps {
-  date: DateType;
-  onPressPrev: () => void;
-  onPressNext: () => void;
-}
-
-const Header = (props: HeaderProps) => {
-  const { curDate, onPressPrev, onPressNext } = props;
-  return (
-    <View style={styles.header}>
-      <CalenderButton onPress={onPressPrev}>&lt;</CalenderButton>
-      <Text>
-        {convertToMonth(curDate.month)} {curDate.year}
-      </Text>
-      <CalenderButton onPress={onPressNext}>&gt;</CalenderButton>
-    </View>
-  );
-};
-
-const Week = () => {
-  return (
-    <View style={styles.week}>
-      {WEEK.map((item) => (
-        <Text key={item.day}>{item.day}</Text>
-      ))}
-    </View>
-  );
-};
-
 const Calendar = (props: CalendarProps) => {
-  const { onClickDay, isClick, curDate } = props;
+  const { onClickDay, isClick, date } = props;
 
   const calendar = useMemo(
     () =>
       makeCalendarDate({
-        year: curDate.year,
-        month: curDate.month,
+        year: date.year,
+        month: date.month,
       }),
-    [curDate],
+    [date],
   );
 
   const renderDates = (item: DateType) => {
@@ -98,7 +50,7 @@ const Calendar = (props: CalendarProps) => {
       <CalendarDay
         onPress={() => onClickDay(item)}
         style={[isSameDate(isClick, item) && styles.border]}
-        isCur={isNotCurMonth(item.month, curDate.month)}
+        isCur={isNotCurMonth(item.month, date.month)}
         key={makeDateKey({
           year: item.year,
           month: item.month,
@@ -142,8 +94,8 @@ const Calendars = (props: CalendarsProps) => {
 
   // 여기서 스와이프 방향에 따라서 플래그를 설정해서 함수를 호출하면 되지 않을까 MonthCalendar를 호출할지 WeeklyCalendar를 호출할지
 
-  const RenderCalendar = (props: RenderCalendarProps) => {
-    const { curDate } = props;
+  const RenderCalendar = (props: CalendarsProps) => {
+    const { date: curDate } = props;
 
     const onClickDay = (cur: { year: number; month: number; day: number }) => {
       setIsClick(cur);
@@ -152,7 +104,7 @@ const Calendars = (props: CalendarsProps) => {
     const calendarProps = {
       onClickDay,
       isClick,
-      curDate,
+      date: curDate,
     };
 
     return <Calendar {...calendarProps} />;
@@ -160,50 +112,17 @@ const Calendars = (props: CalendarsProps) => {
 
   return (
     <View style={styles.carousel}>
-      <RenderCalendar curDate={prevDate} />
-      <RenderCalendar curDate={date} />
-      <RenderCalendar curDate={nextDate} />
+      <RenderCalendar date={prevDate} />
+      <RenderCalendar date={date} />
+      <RenderCalendar date={nextDate} />
     </View>
   );
 };
 
-const MonthCalender = () => {
+const CalendarMonthlyScreen = (props: CalendarMonthlyProps) => {
+  const { date, onChangeDate } = props;
   const scrollRef = useRef<ScrollView>(null);
   const [layoutWidth, setLayoutWidth] = useState(windowWidth);
-  const curDate = getCurDate();
-  const [date, setDate] = useState(curDate);
-
-  const onPressNext = () => {
-    setDate((cur) => {
-      if (cur.month === 11) {
-        return {
-          ...cur,
-          year: cur.year + 1,
-          month: 0,
-        };
-      }
-      return {
-        ...cur,
-        month: cur.month + 1,
-      };
-    });
-  };
-
-  const onPressPrev = () => {
-    setDate((cur) => {
-      if (cur.month === 0) {
-        return {
-          ...cur,
-          year: cur.year - 1,
-          month: 11,
-        };
-      }
-      return {
-        ...cur,
-        month: cur.month - 1,
-      };
-    });
-  };
 
   const scrollToMiddleCalendar = () => {
     scrollRef.current?.scrollTo({
@@ -224,23 +143,16 @@ const MonthCalender = () => {
     if (scrollRef && scrollRef.current) {
       if (xValue === 0) {
         scrollToMiddleCalendar();
-        setDate(prevMonth);
+        onChangeDate(prevMonth);
       } else if (xValue === maxLayoutFloor) {
         scrollToMiddleCalendar();
-        setDate(nextMonth);
+        onChangeDate(nextMonth);
       }
     }
   };
 
   const calendarsProp = {
     date,
-    onPressNext,
-    onPressPrev,
-  };
-  const headerProps = {
-    curDate: date,
-    onPressNext,
-    onPressPrev,
   };
 
   return (
@@ -251,9 +163,6 @@ const MonthCalender = () => {
         scrollToMiddleCalendar();
       }}
     >
-      <Header {...headerProps} />
-      <Week />
-
       <ScrollView
         contentContainerStyle={styles.scrollView}
         horizontal
@@ -270,13 +179,9 @@ const MonthCalender = () => {
   );
 };
 
-const CalendarScreen = () => {
-  return <MonthCalender />;
-};
-
 const styles = StyleSheet.create({
   container: {
-    height: 420,
+    height: 320,
     paddingHorizontal: 20,
   },
   scrollView: {},
@@ -306,4 +211,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CalendarScreen;
+export default CalendarMonthlyScreen;

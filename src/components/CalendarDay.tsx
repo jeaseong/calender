@@ -11,7 +11,7 @@ import {
 
 interface Props extends TextProps, TouchableOpacityProps {
   style?: StyleProp<ViewStyle>;
-  isCur: boolean;
+  isCur?: boolean;
 }
 
 const CalendarDay = ({ children, onPress = () => {}, style, isCur }: Props) => {
