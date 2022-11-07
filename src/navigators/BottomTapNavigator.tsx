@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
-import CalenderScreen from '../screens/CalendarScreen';
+import CalenderScreen from '../screens/Calendar/CalendarScreen';
 import LibraryScreen from '../screens/LibraryScreen';
 import MyPageScreen from '../screens/MyPageScreen';
 

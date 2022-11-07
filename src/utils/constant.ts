@@ -30,3 +30,7 @@ export const WEEK = [
 ];
 
 export const CALENDAR_PADDING = 40;
+
+export const WEEKLY = false;
+
+export const MONTHLY = true;

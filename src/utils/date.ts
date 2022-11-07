@@ -62,6 +62,19 @@ export const makeDateKey = ({ year, month, day }: DayType) => {
   return `${year}${convertToMonth(month)}${day}`;
 };
 
+export const makeWeeklyCalendarDate = (
+  date: DayType,
+  arr: DayType[],
+): DayType[] => {
+  if (arr.length === 14) {
+    return arr;
+  }
+  for (let i = 0; i < 7; i++) {
+    arr.push({ ...date });
+  }
+  return makeWeeklyCalendarDate(arr.slice(-1)[0], arr);
+};
+
 export const makeCalendarDate = ({ year, month }: DateType) => {
   const prevDate = new Date(year, month, 0).getDate();
   const prevDay = new Date(year, month, 0).getDay();
