@@ -5,11 +5,12 @@ import {
   View,
   FlatList,
   SafeAreaView,
-  ScrollView,
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
+
+import { ScrollView } from 'react-native-gesture-handler';
 
 import CalenderButton from '../components/CalenderButton';
 import CalendarDay from '../components/CalendarDay';
@@ -128,7 +129,7 @@ const Calendar = (props: CalendarProps) => {
 };
 
 const Calendars = (props: CalendarsProps) => {
-  const { date, onPressNext, onPressPrev } = props;
+  const { date } = props;
 
   const prevDate = getPrevDate(date);
   const nextDate = getNextDate(date);
@@ -139,17 +140,13 @@ const Calendars = (props: CalendarsProps) => {
     day: 0,
   });
 
+  // 여기서 스와이프 방향에 따라서 플래그를 설정해서 함수를 호출하면 되지 않을까 MonthCalendar를 호출할지 WeeklyCalendar를 호출할지
+
   const RenderCalendar = (props: RenderCalendarProps) => {
     const { curDate } = props;
 
     const onClickDay = (cur: { year: number; month: number; day: number }) => {
       setIsClick(cur);
-    };
-
-    const headerProps = {
-      curDate,
-      onPressNext,
-      onPressPrev,
     };
 
     const calendarProps = {
@@ -158,13 +155,7 @@ const Calendars = (props: CalendarsProps) => {
       curDate,
     };
 
-    return (
-      <View style={styles.calendar}>
-        <Header {...headerProps} />
-        <Week />
-        <Calendar {...calendarProps} />
-      </View>
-    );
+    return <Calendar {...calendarProps} />;
   };
 
   return (
@@ -176,13 +167,11 @@ const Calendars = (props: CalendarsProps) => {
   );
 };
 
-const CalenderScreen = () => {
+const MonthCalender = () => {
   const scrollRef = useRef<ScrollView>(null);
   const [layoutWidth, setLayoutWidth] = useState(windowWidth);
   const curDate = getCurDate();
   const [date, setDate] = useState(curDate);
-  // const prevMonth = useMemo(() => getPrevDate(date), [date]);
-  // const nextMonth = useMemo(() => getNextDate(date), [date]);
 
   const onPressNext = () => {
     setDate((cur) => {
@@ -224,7 +213,7 @@ const CalenderScreen = () => {
   };
 
   const scrollEffect = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const xValue = Math.floor(e.nativeEvent.contentOffset.x);
+    const xValue = Math.ceil(e.nativeEvent.contentOffset.x);
     const maxLayoutFloor = Math.floor(layoutWidth - CALENDAR_PADDING) * 2;
     const prevMonth = getPrevDate(date);
     const nextMonth = getNextDate(date);
@@ -248,15 +237,23 @@ const CalenderScreen = () => {
     onPressNext,
     onPressPrev,
   };
+  const headerProps = {
+    curDate: date,
+    onPressNext,
+    onPressPrev,
+  };
 
   return (
     <SafeAreaView
-      style={styles.container}
+      style={[styles.container]}
       onLayout={(e) => {
         setLayoutWidth(e.nativeEvent.layout.width);
         scrollToMiddleCalendar();
       }}
     >
+      <Header {...headerProps} />
+      <Week />
+
       <ScrollView
         contentContainerStyle={styles.scrollView}
         horizontal
@@ -273,17 +270,18 @@ const CalenderScreen = () => {
   );
 };
 
+const CalendarScreen = () => {
+  return <MonthCalender />;
+};
+
 const styles = StyleSheet.create({
   container: {
-    height: 400,
+    height: 420,
     paddingHorizontal: 20,
   },
   scrollView: {},
   carousel: {
     flexDirection: 'row',
-  },
-  calendar: {
-    width: windowWidth - CALENDAR_PADDING,
   },
   header: {
     flexDirection: 'row',
@@ -295,7 +293,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
-  days: {},
+  days: {
+    width: windowWidth - CALENDAR_PADDING,
+  },
   border: {
     borderWidth: 1,
     borderRadius: 14,
@@ -306,4 +306,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CalenderScreen;
+export default CalendarScreen;

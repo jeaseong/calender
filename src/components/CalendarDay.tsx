@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,9 +6,10 @@ import {
   TextProps,
   ViewStyle,
   StyleProp,
+  TouchableOpacityProps,
 } from 'react-native';
 
-interface Props extends TextProps {
+interface Props extends TextProps, TouchableOpacityProps {
   style?: StyleProp<ViewStyle>;
   isCur: boolean;
 }
@@ -24,11 +25,13 @@ const CalendarDay = ({ children, onPress = () => {}, style, isCur }: Props) => {
 };
 
 const styles = StyleSheet.create({
-  btn: { width: '14.2%', height: 50, padding: 9 },
+  btn: { width: '14.2%', padding: 9 },
   text: {
     fontSize: 16,
     lineHeight: 30,
     textAlign: 'center',
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   isNotCur: {
     color: '#C9C9C9',
