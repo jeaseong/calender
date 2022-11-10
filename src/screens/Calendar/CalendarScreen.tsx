@@ -8,9 +8,13 @@ import CalendarWeeklyScreen from './CalendarWeeklyScreen';
 
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  Easing,
+  runOnJS,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
+  withDelay,
+  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -44,13 +48,12 @@ const Header = (props: HeaderProps) => {
 const CalendarScreen = () => {
   const curDate = getCurDate();
   const [date, setDate] = useState(curDate);
+  const [mode, setMode] = useState(true);
+  console.log(mode);
 
   const offsetHeight = useSharedValue(320);
 
-  const mode = useSharedValue(true);
-  const offsetMode = useDerivedValue(() => {
-    return mode.value;
-  }, [mode]);
+  const offsetMode = useSharedValue(true);
 
   const onPressNext = () => {
     setDate((cur) => {
@@ -88,6 +91,14 @@ const CalendarScreen = () => {
     setDate(newDate);
   };
 
+  const onChageWeekly = () => {
+    setMode(false);
+  };
+
+  const onChageMonthly = () => {
+    setMode(true);
+  };
+
   const calendarProps = useMemo(
     () => ({
       date,
@@ -110,10 +121,10 @@ const CalendarScreen = () => {
     .onEnd((e) => {
       if (e.translationY < 0) {
         offsetHeight.value = 50;
-        mode.value = WEEKLY;
+        runOnJS(onChageWeekly)();
       } else {
         offsetHeight.value = 320;
-        mode.value = MONTHLY;
+        runOnJS(onChageMonthly)();
       }
     });
 
@@ -140,7 +151,7 @@ const CalendarScreen = () => {
       <Week />
       <GestureDetector gesture={gesture}>
         <Animated.View style={[styles.change, animatedStyle]}>
-          {offsetMode.value ? (
+          {mode ? (
             <CalendarMonthlyScreen {...calendarProps} />
           ) : (
             <CalendarWeeklyScreen {...calendarProps} />
