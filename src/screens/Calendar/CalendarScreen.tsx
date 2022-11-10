@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { convertToMonth, getCurDate } from '../../utils/date';
 import CalendarMonthlyScreen from './CalendarMonthlyScreen';
@@ -44,7 +44,6 @@ const Header = (props: HeaderProps) => {
 const CalendarScreen = () => {
   const curDate = getCurDate();
   const [date, setDate] = useState(curDate);
-  const [bit, setBit] = useState(true);
 
   const offsetHeight = useSharedValue(320);
 
@@ -89,10 +88,13 @@ const CalendarScreen = () => {
     setDate(newDate);
   };
 
-  const calendarProps = {
-    date,
-    onChangeDate,
-  };
+  const calendarProps = useMemo(
+    () => ({
+      date,
+      onChangeDate,
+    }),
+    [date],
+  );
   const headerProps = {
     date,
     onPressNext,
@@ -123,20 +125,26 @@ const CalendarScreen = () => {
     };
   });
 
-  const RenderCalendar = ({ bit }: { bit: any }) => {
-    return bit ? (
-      <CalendarMonthlyScreen {...calendarProps} />
-    ) : (
-      <CalendarWeeklyScreen {...calendarProps} />
-    );
-  };
+  // 이렇게 넘기면 왜 렌더링이 일어날까..
+  // const RenderCalendar = memo(({ bit }: { bit: any }) => {
+  //   return bit ? (
+  //     <CalendarMonthlyScreen {...calendarProps} />
+  //   ) : (
+  //     <CalendarWeeklyScreen {...calendarProps} />
+  //   );
+  // });
+
   return (
     <View>
       <Header {...headerProps} />
       <Week />
       <GestureDetector gesture={gesture}>
         <Animated.View style={[styles.change, animatedStyle]}>
-          <RenderCalendar bit={offsetMode.value} />
+          {offsetMode.value ? (
+            <CalendarMonthlyScreen {...calendarProps} />
+          ) : (
+            <CalendarWeeklyScreen {...calendarProps} />
+          )}
         </Animated.View>
       </GestureDetector>
     </View>
@@ -146,12 +154,13 @@ const CalendarScreen = () => {
 const styles = StyleSheet.create({
   container: {
     height: 320,
-    paddingHorizontal: 20,
   },
 
   week: {
     flexDirection: 'row',
+
     justifyContent: 'space-around',
+    paddingHorizontal: 20,
   },
   header: {
     flexDirection: 'row',

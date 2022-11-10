@@ -92,8 +92,6 @@ const Calendars = (props: CalendarsProps) => {
     day: 0,
   });
 
-  // 여기서 스와이프 방향에 따라서 플래그를 설정해서 함수를 호출하면 되지 않을까 MonthCalendar를 호출할지 WeeklyCalendar를 호출할지
-
   const RenderCalendar = (props: CalendarsProps) => {
     const { date: curDate } = props;
 
@@ -211,4 +209,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CalendarMonthlyScreen;
+export default React.memo(CalendarMonthlyScreen);
