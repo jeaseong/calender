@@ -7,6 +7,12 @@ interface DayType extends DateType {
   day: number;
 }
 
+type Weely = {
+  year: number;
+  month: number;
+  position: 'prev' | 'next';
+};
+
 export const getCurDate = () => {
   const date = new Date();
   const year = date.getFullYear();
@@ -99,21 +105,33 @@ const subDay = (date: DayType, d: number) => {
   return { year, month, day: day - d };
 };
 
-export const makeWeeklyCalendarDate = ({ year, month }: DateType) => {
-  const monthDate = makeCalendarDate({ year, month });
-  const first = monthDate[0];
-  const last = monthDate[monthDate.length - 1];
-  const prev = [];
-  for (let i = 1; i <= 14; i++) {
-    const date = subDay(first, i);
-    prev.unshift(date);
-  }
+const makeWeeklyCalendarNextTwoDate = (last: DayType) => {
   const next = [];
   for (let i = 1; i <= 14; i++) {
     const date = addDay(last, i);
     next.push(date);
   }
-  return prev.concat(monthDate, next);
+  return next;
+};
+
+const makeWeeklyCalendarPrevTwoDate = (first: DayType) => {
+  const prev = [];
+  for (let i = 1; i <= 14; i++) {
+    const date = subDay(first, i);
+    prev.unshift(date);
+  }
+  return prev;
+};
+
+export const makeWeeklyCalendarDate = ({ year, month, position }: Weely) => {
+  const monthDate = makeCalendarDate({ year, month });
+  const first = monthDate[0];
+  const last = monthDate[monthDate.length - 1];
+  const nextWeekDate = makeWeeklyCalendarNextTwoDate(last);
+  const prevWeekDate = makeWeeklyCalendarPrevTwoDate(first);
+  return position === 'next'
+    ? monthDate.concat(nextWeekDate)
+    : prevWeekDate.concat(monthDate);
 };
 
 export const makeCalendarDate = ({ year, month }: DateType) => {

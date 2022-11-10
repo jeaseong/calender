@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   FlatList,
   Dimensions,
@@ -19,18 +19,24 @@ import CalendarDayWeekly from '../../components/CalendarDayWeekly';
 
 const { width: windowWidth } = Dimensions.get('window');
 
+type PositionType = 'prev' | 'next';
+
 const CalendarWeeklyScreen = (props: CalendarMonthlyProps) => {
   const { date, onChangeDate } = props;
+
+  const [position, setPosition] = useState<PositionType>('prev');
 
   const weeklyDate = makeWeeklyCalendarDate({
     year: date.year,
     month: date.month,
+    position,
   });
-  const length = weeklyDate.length;
+
   const flatListRef = useRef<FlatList>();
 
   const onReachEnd = () => {
     const next = getNextDate(date);
+    setPosition('prev');
     onChangeDate(next);
   };
 
@@ -38,24 +44,24 @@ const CalendarWeeklyScreen = (props: CalendarMonthlyProps) => {
     const widthFromStart = e.nativeEvent.contentOffset.x;
     if (widthFromStart < windowWidth) {
       const prev = getPrevDate(date);
+      setPosition('prev');
       onChangeDate(prev);
 
       flatListRef.current.scrollToIndex({
         animated: false,
-        index: 14,
+        index: 35,
       });
     }
   };
   const renderDates = (item: DateType) => {
+    const isCurMonth = isNotCurMonth(item.month, date.month);
+    const key = makeDateKey({
+      year: item.year,
+      month: item.month,
+      day: item.day,
+    });
     return (
-      <CalendarDayWeekly
-        isCur={isNotCurMonth(item.month, date.month)}
-        key={makeDateKey({
-          year: item.year,
-          month: item.month,
-          day: item.day,
-        })}
-      >
+      <CalendarDayWeekly isCur={isCurMonth} key={key}>
         {item.day}
       </CalendarDayWeekly>
     );
@@ -71,7 +77,7 @@ const CalendarWeeklyScreen = (props: CalendarMonthlyProps) => {
       bounces
       showsHorizontalScrollIndicator={false}
       onEndReached={onReachEnd}
-      onEndReachedThreshold={0.01}
+      // onEndReachedThreshold={0.01}
       onMomentumScrollEnd={onEndMove}
       getItemLayout={(_, index) => ({
         length: windowWidth / 7,

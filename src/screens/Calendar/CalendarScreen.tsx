@@ -49,11 +49,8 @@ const CalendarScreen = () => {
   const curDate = getCurDate();
   const [date, setDate] = useState(curDate);
   const [mode, setMode] = useState(true);
-  console.log(mode);
 
   const offsetHeight = useSharedValue(320);
-
-  const offsetMode = useSharedValue(true);
 
   const onPressNext = () => {
     setDate((cur) => {
